@@ -37,13 +37,14 @@ resource "talos_cluster_kubeconfig" "this" {
   depends_on = [talos_machine_configuration_apply.control_plane]
 }
 
+
+
 resource "terraform_data" "create_talosconfig" {
   count = var.cluster_talosconfig_path != null ? 1 : 0
 
-  # triggers_replace = [
-  #   sha1(local.talosconfig),
-  #   var.cluster_talosconfig_path
-  # ]
+ triggers_replace =  [
+    timestamp()
+  ]
 
   input = {
     cluster_talosconfig_path = var.cluster_talosconfig_path
@@ -85,10 +86,9 @@ resource "terraform_data" "create_talosconfig" {
 resource "terraform_data" "create_kubeconfig" {
   count = var.cluster_kubeconfig_path != null ? 1 : 0
 
-  # triggers_replace = [
-  #   sha1(local.kubeconfig),
-  #   var.cluster_kubeconfig_path
-  # ]
+ triggers_replace =  [
+    timestamp()
+  ]
 
   input = {
     cluster_kubeconfig_path = var.cluster_kubeconfig_path
