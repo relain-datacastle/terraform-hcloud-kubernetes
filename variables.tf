@@ -509,6 +509,18 @@ variable "talos_image_extensions" {
   description = "Specifies Talos image extensions for additional functionality on top of the default Talos Linux capabilities. See: https://github.com/siderolabs/extensions"
 }
 
+variable "talos_discovery_kubernetes_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable or disable Kubernetes-based Talos discovery service. Deprecated as of Kubernetes v1.32, where the AuthorizeNodeWithSelectors feature gate is enabled by default."
+}
+
+variable "talos_discovery_service_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable or disable Sidero Labs public Talos discovery service."
+}
+
 variable "talos_kubelet_extra_mounts" {
   type = list(object({
     source      = string
@@ -657,12 +669,42 @@ variable "talos_registries" {
   EOF
 }
 
+variable "talos_logging_destinations" {
+  description = "List of objects defining remote destinations for Talos service logs."
+  type = list(object({
+    endpoint  = string
+    format    = optional(string, "json_lines")
+    extraTags = optional(map(string), {})
+  }))
+  default = []
+}
+
+variable "talos_extra_inline_manifests" {
+  type = list(object({
+    name     = string
+    contents = string
+  }))
+  description = "List of additional inline Kubernetes manifests to append to the Talos machine configuration during bootstrap."
+  default     = null
+}
+
+variable "talos_extra_remote_manifests" {
+  type        = list(string)
+  description = "List of remote URLs pointing to Kubernetes manifests to be appended to the Talos machine configuration during bootstrap."
+  default     = null
+}
 
 # Talos Backup
 variable "talos_backup_version" {
   type        = string
   default     = "v0.1.0-beta.2-1-g9ccc125"
   description = "Specifies the version of Talos Backup to be used in generated machine configurations."
+}
+
+variable "talos_backup_s3_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable Talos etcd S3 backup cronjob."
 }
 
 variable "talos_backup_s3_hcloud_url" {
@@ -775,9 +817,15 @@ variable "kube_api_extra_args" {
 
 
 # Talos CCM
+variable "talos_ccm_enabled" {
+  type        = bool
+  default     = true
+  description = "Enables the Talos Cloud Controller Manager (CCM) deployment."
+}
+
 variable "talos_ccm_version" {
   type        = string
-  default     = "v1.9.0" # https://github.com/siderolabs/talos-cloud-controller-manager
+  default     = "v1.9.1" # https://github.com/siderolabs/talos-cloud-controller-manager
   description = "Specifies the version of the Talos Cloud Controller Manager (CCM) to use. This version controls cloud-specific integration features in the Talos operating system."
 }
 
@@ -823,6 +871,12 @@ variable "hcloud_load_balancer_location" {
 
 
 # Hetzner Cloud Controller Manager (CCM)
+variable "hcloud_ccm_enabled" {
+  type        = bool
+  default     = true
+  description = "Enables the Hetzner Cloud Controller Manager (CCM)."
+}
+
 variable "hcloud_ccm_helm_repository" {
   type        = string
   default     = "https://charts.hetzner.cloud"
@@ -837,7 +891,7 @@ variable "hcloud_ccm_helm_chart" {
 
 variable "hcloud_ccm_helm_version" {
   type        = string
-  default     = "1.23.0"
+  default     = "1.24.0"
   description = "Version of the Hcloud CCM Helm chart to deploy."
 }
 
@@ -913,6 +967,12 @@ variable "longhorn_enabled" {
 
 
 # Cilium
+variable "cilium_enabled" {
+  type        = bool
+  default     = true
+  description = "Enables the Cilium CNI deployment."
+}
+
 variable "cilium_helm_repository" {
   type        = string
   default     = "https://helm.cilium.io"
@@ -927,7 +987,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.17.2"
+  default     = "1.17.3"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1043,7 +1103,7 @@ variable "cert_manager_helm_chart" {
 
 variable "cert_manager_helm_version" {
   type        = string
-  default     = "v1.17.1"
+  default     = "v1.17.2"
   description = "Version of the Cert Manager Helm chart to deploy."
 }
 
@@ -1075,7 +1135,7 @@ variable "ingress_nginx_helm_chart" {
 
 variable "ingress_nginx_helm_version" {
   type        = string
-  default     = "4.12.1"
+  default     = "4.12.2"
   description = "Version of the Ingress NGINX Controller Helm chart to deploy."
 }
 
@@ -1332,8 +1392,14 @@ variable "ingress_load_balancer_pools" {
 
 
 # Miscellaneous
+variable "prometheus_operator_crds_enabled" {
+  type        = bool
+  default     = true
+  description = "Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment."
+}
+
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.81.0" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.82.1" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }
