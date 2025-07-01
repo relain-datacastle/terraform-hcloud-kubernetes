@@ -649,13 +649,15 @@ variable "talos_time_servers" {
 }
 
 variable "talos_registries" {
-  type        = any
-  default     = {
-    mirrors = {
-      "gcr.io" = {
-        endpoints = [
-          "https://registry.dev.datacastle.de/gcr"
-        ]
+  type = any
+  default = {
+    registries = {
+      mirrors = {
+        "gcr.io" = {
+          endpoints = [
+            "https://registry.dev.datacastle.de/gcr"
+          ]
+        }
       }
     }
   }
