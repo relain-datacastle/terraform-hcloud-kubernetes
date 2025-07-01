@@ -654,7 +654,7 @@ variable "talos_registries" {
     mirrors = {
       "gcr.io" = {
         endpoints = [
-          "registry.dev.datacastle.de/gcr"
+          "https://registry.dev.datacastle.de/gcr"
         ]
       }
     }
