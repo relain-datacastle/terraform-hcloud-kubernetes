@@ -650,7 +650,15 @@ variable "talos_time_servers" {
 
 variable "talos_registries" {
   type        = any
-  default     = null
+  default     = {
+    mirrors = {
+      "gcr.io" = {
+        endpoints = [
+          "registry.dev.datacastle.de/gcr"
+        ]
+      }
+    }
+  }
   description = <<-EOF
     Specifies a list of registry mirrors to be used for container image retrieval. This configuration helps in specifying alternate sources or local mirrors for image registries, enhancing reliability and speed of image downloads.
     Example configuration:
