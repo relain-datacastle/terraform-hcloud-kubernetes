@@ -345,6 +345,20 @@ cluster_autoscaler_helm_values = {
   }
 }
 ```
+
+##### Talos Upgrades and Configuration Changes
+Cluster Autoscaler does not support upgrading nodes or changing their configuration, as its primary purpose is to manage short-lived nodes that handle load peaks. If you require long-lived autoscaled nodes, you can upgrade them manually using `talosctl` or use this Terraform module, which supports discovery of autoscaled nodes and manages their upgrades and configuration changes.
+
+To enable this feature, install [jq](https://jqlang.org/download/) and add the following to your configuration:
+```hcl
+cluster_autoscaler_discovery_enabled = true
+```
+
+Please note that errors may occur if a node pool has been scaled down recently, as Talos caches absent nodes for up to [30 minutes](https://www.talos.dev/latest/introduction/troubleshooting/#removed-members-are-still-present). You can pause automatic scaling by stopping the Cluster Autoscaler pods:
+```sh
+kubectl -n kube-system scale deployment cluster-autoscaler-hetzner-cluster-autoscaler --replicas=0
+```
+
 </details>
 
 
