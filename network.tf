@@ -23,20 +23,23 @@ locals {
   )
 
   # Lists for control plane nodes
-  control_plane_public_ipv4_list        = [for server in hcloud_server.control_plane : server.ipv4_address]
-  control_plane_public_ipv6_list        = [for server in hcloud_server.control_plane : server.ipv6_address]
-  control_plane_public_ipv6_subnet_list = [for server in hcloud_server.control_plane : server.ipv6_network]
-  control_plane_private_ipv4_list       = [for server in hcloud_server.control_plane : tolist(server.network)[0].ip]
+  control_plane_public_ipv4_list  = compact(distinct([for server in hcloud_server.control_plane : server.ipv4_address]))
+  control_plane_public_ipv6_list  = compact(distinct([for server in hcloud_server.control_plane : server.ipv6_address]))
+  control_plane_private_ipv4_list = compact(distinct([for server in hcloud_server.control_plane : tolist(server.network)[0].ip]))
 
   # Control plane VIPs
   control_plane_public_vip_ipv4  = local.control_plane_public_vip_ipv4_enabled ? data.hcloud_floating_ip.control_plane_ipv4[0].ip_address : null
   control_plane_private_vip_ipv4 = cidrhost(hcloud_network_subnet.control_plane.ip_range, -2)
 
   # Lists for worker nodes
-  worker_public_ipv4_list        = [for server in hcloud_server.worker : server.ipv4_address]
-  worker_public_ipv6_list        = [for server in hcloud_server.worker : server.ipv6_address]
-  worker_public_ipv6_subnet_list = [for server in hcloud_server.worker : server.ipv6_network]
-  worker_private_ipv4_list       = [for server in hcloud_server.worker : tolist(server.network)[0].ip]
+  worker_public_ipv4_list  = compact(distinct([for server in hcloud_server.worker : server.ipv4_address]))
+  worker_public_ipv6_list  = compact(distinct([for server in hcloud_server.worker : server.ipv6_address]))
+  worker_private_ipv4_list = compact(distinct([for server in hcloud_server.worker : tolist(server.network)[0].ip]))
+
+  # Lists for cluster autoscaler nodes
+  cluster_autoscaler_public_ipv4_list  = compact(distinct([for server in local.cluster_autoscaler_server : server.public_ipv4_address]))
+  cluster_autoscaler_public_ipv6_list  = compact(distinct([for server in local.cluster_autoscaler_server : server.public_ipv6_address]))
+  cluster_autoscaler_private_ipv4_list = compact(distinct([for server in local.cluster_autoscaler_server : server.private_ipv4_address]))
 }
 
 data "hcloud_location" "this" {

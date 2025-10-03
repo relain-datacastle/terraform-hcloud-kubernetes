@@ -489,6 +489,12 @@ variable "cluster_autoscaler_config_patches" {
   description = "List of configuration patches applied to the Cluster Autoscaler nodes."
 }
 
+variable "cluster_autoscaler_discovery_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable rolling upgrades of Cluster Autoscaler nodes during Talos OS upgrades and Talos configuration changes. This feature requires jq to be installed on the machine running Terraform."
+}
+
 
 # Packer
 variable "packer_amd64_builder" {
