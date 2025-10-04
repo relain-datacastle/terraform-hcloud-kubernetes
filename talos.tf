@@ -86,7 +86,7 @@ resource "terraform_data" "upgrade_control_plane" {
 
       if ${local.cluster_initialized}; then
         echo "Start upgrading Control Plane Nodes"
-        ${local.talos_healthcheck_enabled} && talosctl --talosconfig "$talosconfig" health --server -n '${local.talos_primary_node_private_ipv4}'
+        ${local.talos_healthcheck_enabled} && talosctl --talosconfig "$talosconfig" health --server -n "$host"
         set -- ${join(" ", local.control_plane_private_ipv4_list)}
         for host in "$@"; do
           talosctl --talosconfig "$talosconfig" upgrade -n "$host" --preserve --image '${local.talos_installer_image_url}'
