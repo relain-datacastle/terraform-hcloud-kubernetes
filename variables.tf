@@ -499,7 +499,7 @@ variable "cluster_autoscaler_discovery_enabled" {
 # Packer
 variable "packer_amd64_builder" {
   type = object({
-    server_type     = optional(string, "cpx11")
+    server_type     = optional(string, "cx23")
     server_location = optional(string, "fsn1")
   })
   default     = {}
