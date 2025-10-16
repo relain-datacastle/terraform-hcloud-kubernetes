@@ -126,3 +126,34 @@ resource "terraform_data" "create_kubeconfig" {
 
   depends_on = [talos_machine_configuration_apply.control_plane]
 }
+
+data "external" "talosctl_version_check" {
+  program = [
+    "sh", "-c", <<-EOT
+      set -eu
+
+      parsed_version=$(
+        talosctl version --client --short | while IFS= read -r line; do
+          case $line in
+            *[vV][0-9]*.[0-9]*.[0-9]*)
+              v=$${line##*[vV]}; maj=$${v%%.*}; r=$${v#*.}; min=$${r%%.*}; patch=$${r#*.}
+              printf '%s %s %s\n' "$maj" "$min" "$patch"; break
+              ;;
+          esac
+        done
+      )
+      [ -n "$parsed_version" ] || { echo "Could not parse talosctl client version" >&2; exit 1; }
+
+      set -- $parsed_version; major=$1; minor=$2; patch=$3
+      if [ "$major" -lt "${local.talos_version_major}" ] ||
+        { [ "$major" -eq "${local.talos_version_major}" ] && [ "$minor" -lt "${local.talos_version_minor}" ]; } ||
+        { [ "$major" -eq "${local.talos_version_major}" ] && [ "$minor" -eq "${local.talos_version_minor}" ] && [ "$patch" -lt "${local.talos_version_patch}" ]; }
+      then
+        echo "talosctl version ($major.$minor.$patch) is lower than Talos target version: ${local.talos_version_major}.${local.talos_version_minor}.${local.talos_version_patch}" >&2
+        exit 1
+      fi
+
+      echo "{\"talosctl_version\": \"$major.$minor.$patch\"}"
+    EOT
+  ]
+}
