@@ -132,14 +132,29 @@ data "external" "talosctl_version_check" {
     "sh", "-c", <<-EOT
       set -eu
 
+      parse() {
+        case $1 in
+          *[vV][0-9]*.[0-9]*.[0-9]*)
+            v=$${1##*[vV]}
+            maj=$${v%%.*}
+            r=$${v#*.}
+            min=$${r%%.*}
+            patch=$${r#*.}
+            patch=$${patch%%[^0-9]*}
+            printf '%s %s %s\n' "$maj" "$min" "$patch"
+            return 0
+            ;;
+        esac
+        return 1
+      }
+
       parsed_version=$(
-        talosctl version --client --short | while IFS= read -r line; do
-          case $line in
-            *[vV][0-9]*.[0-9]*.[0-9]*)
-              v=$${line##*[vV]}; maj=$${v%%.*}; r=$${v#*.}; min=$${r%%.*}; patch=$${r#*.}
-              printf '%s %s %s\n' "$maj" "$min" "$patch"; break
-              ;;
-          esac
+        talosctl version --client --short |
+        while IFS= read -r line; do
+          if out=$(parse "$line"); then
+            printf '%s\n' "$out"
+            break
+          fi
         done
       )
       [ -n "$parsed_version" ] || { echo "Could not parse talosctl client version" >&2; exit 1; }
@@ -153,7 +168,7 @@ data "external" "talosctl_version_check" {
         exit 1
       fi
 
-      echo "{\"talosctl_version\": \"$major.$minor.$patch\"}"
+      printf '%s\n' "{\"talosctl_version\": \"$major.$minor.$patch\"}"
     EOT
   ]
 }
