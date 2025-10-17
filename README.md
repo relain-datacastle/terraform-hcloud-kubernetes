@@ -161,10 +161,10 @@ module "kubernetes" {
   ingress_nginx_enabled = true
 
   control_plane_nodepools = [
-    { name = "control", type = "cx23", location = "fsn1", count = 3 }
+    { name = "control", type = "cpx22", location = "fsn1", count = 3 }
   ]
   worker_nodepools = [
-    { name = "worker", type = "cpx32", location = "fsn1", count = 3 }
+    { name = "worker", type = "cpx22", location = "fsn1", count = 3 }
   ]
 }
 ```
@@ -324,7 +324,7 @@ Example `kubernetes.tf` snippet:
 cluster_autoscaler_nodepools = [
   {
     name     = "autoscaler"
-    type     = "cpx32"
+    type     = "cpx22"
     location = "fsn1"
     min      = 0
     max      = 6
@@ -420,7 +420,7 @@ worker_nodepools = [
   # ... (other node pool configurations)
   {
     name     = "egress"
-    type     = "cpx32"
+    type     = "cpx22"
     location = "fsn1"
     labels   = { "egress-node" = "true" }
     taints   = [ "egress-node=true:NoSchedule" ]
@@ -766,7 +766,7 @@ talos_backup_s3_hcloud_url  = "https://<bucket>.<location>.your-objectstorage.co
 cluster_autoscaler_nodepools = [
   {
     name     = "autoscaler"
-    type     = "cpx32"
+    type     = "cpx22"
     location = "fsn1"
     min      = 0
     max      = 6
