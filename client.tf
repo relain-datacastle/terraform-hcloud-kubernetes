@@ -161,8 +161,8 @@ data "external" "talosctl_version_check" {
 
       set -- $parsed_version; major=$1; minor=$2; patch=$3
       if [ "$major" -lt "${local.talos_version_major}" ] ||
-        { [ "$major" -eq "${local.talos_version_major}" ] && [ "$minor" -lt "${local.talos_version_minor}" ]; } ||
-        { [ "$major" -eq "${local.talos_version_major}" ] && [ "$minor" -eq "${local.talos_version_minor}" ] && [ "$patch" -lt "${local.talos_version_patch}" ]; }
+       { [ "$major" -eq "${local.talos_version_major}" ] && [ "$minor" -lt "${local.talos_version_minor}" ]; } ||
+       { [ "$major" -eq "${local.talos_version_major}" ] && [ "$minor" -eq "${local.talos_version_minor}" ] && [ "$patch" -lt "${local.talos_version_patch}" ]; }
       then
         echo "talosctl version ($major.$minor.$patch) is lower than Talos target version: ${local.talos_version_major}.${local.talos_version_minor}.${local.talos_version_patch}" >&2
         exit 1
