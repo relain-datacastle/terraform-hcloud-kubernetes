@@ -128,6 +128,8 @@ resource "terraform_data" "create_kubeconfig" {
 }
 
 data "external" "talosctl_version_check" {
+  count = var.talosctl_version_check_enabled ? 1 : 0
+
   program = [
     "sh", "-c", <<-EOT
       set -eu
@@ -140,7 +142,7 @@ data "external" "talosctl_version_check" {
             r=$${v#*.}
             min=$${r%%.*}
             patch=$${r#*.}
-            patch=$${patch%%[^0-9]*}
+            patch=$${patch%%[!0-9]*}
             printf '%s %s %s\n' "$maj" "$min" "$patch"
             return 0
             ;;
