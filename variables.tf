@@ -88,6 +88,12 @@ variable "cluster_healthcheck_enabled" {
   description = "Determines whether are executed during cluster deployment and upgrade."
 }
 
+variable "talosctl_version_check_enabled" {
+  type        = bool
+  default     = true
+  description = "Controls whether a preflight check verifies the local talosctl client version before provisioning."
+}
+
 variable "cluster_delete_protection" {
   type        = bool
   default     = true
