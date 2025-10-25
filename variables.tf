@@ -88,16 +88,35 @@ variable "cluster_healthcheck_enabled" {
   description = "Determines whether are executed during cluster deployment and upgrade."
 }
 
+variable "cluster_delete_protection" {
+  type        = bool
+  default     = true
+  description = "Adds delete protection for resources that support it."
+}
+
+
+# Client Tools
+variable "client_prerequisites_check_enabled" {
+  type        = bool
+  default     = true
+  description = "Controls whether a preflight check verifies that required client tools are installed before provisioning."
+}
+
 variable "talosctl_version_check_enabled" {
   type        = bool
   default     = true
   description = "Controls whether a preflight check verifies the local talosctl client version before provisioning."
 }
 
-variable "cluster_delete_protection" {
-  type        = bool
-  default     = true
-  description = "Adds delete protection for resources that support it."
+variable "talosctl_retry_count" {
+  type        = number
+  default     = 5
+  description = "Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability."
+
+  validation {
+    condition     = var.talosctl_retry_count >= 0
+    error_message = "The talosctl retry count must be at least 0."
+  }
 }
 
 
@@ -498,7 +517,7 @@ variable "cluster_autoscaler_config_patches" {
 variable "cluster_autoscaler_discovery_enabled" {
   type        = bool
   default     = false
-  description = "Enable rolling upgrades of Cluster Autoscaler nodes during Talos OS upgrades and Talos configuration changes. This feature requires jq to be installed on the machine running Terraform."
+  description = "Enable rolling upgrades of Cluster Autoscaler nodes during Talos OS upgrades and Talos configuration changes."
 }
 
 
