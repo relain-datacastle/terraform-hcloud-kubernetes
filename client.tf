@@ -151,7 +151,7 @@ data "external" "client_prerequisites_check" {
           missing=1
       fi
 
-      printf '{}'
+      printf '%s' '{}'
       exit "$missing"
     EOT
   ]

@@ -90,7 +90,7 @@ locals {
   talosctl_retry_snippet = join(" ",
     [
       "[ \"$retry\" -gt ${local.talosctl_retry_count} ] && exit 1 ||",
-      "{ echo \"Retry $retry/${local.talosctl_retry_count}...\"; retry=$((retry + 1)); sleep 10; }"
+      "{ printf '%s\n' \"Retry $retry/${local.talosctl_retry_count}...\"; retry=$((retry + 1)); sleep 10; }"
     ]
   )
   talosctl_retry_count = 5
@@ -133,7 +133,7 @@ resource "terraform_data" "upgrade_control_plane" {
       printf '%s' "$TALOSCONFIG" > "$talosconfig"
 
       if ${local.cluster_initialized}; then
-        echo "Start upgrading Control Plane Nodes"
+        printf '%s\n' "Start upgrading Control Plane Nodes"
 
         retry=1
         while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.control_plane_private_ipv4_list[0]}'; do
@@ -154,9 +154,9 @@ resource "terraform_data" "upgrade_control_plane" {
           done
         done
 
-        echo "Control Plane Nodes upgraded successfully"
+        printf '%s\n' "Control Plane Nodes upgraded successfully"
       else
-        echo "Cluster not initialized, skipping Control Plane Node upgrade"
+        printf '%s\n' "Cluster not initialized, skipping Control Plane Node upgrade"
       fi
     EOT
 
@@ -189,7 +189,7 @@ resource "terraform_data" "upgrade_worker" {
       printf '%s' "$TALOSCONFIG" > "$talosconfig"
 
       if ${local.cluster_initialized}; then
-        echo "Start upgrading Worker Nodes"
+        printf '%s\n' "Start upgrading Worker Nodes"
 
         retry=1
         while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.talos_primary_node_private_ipv4}'; do
@@ -210,9 +210,9 @@ resource "terraform_data" "upgrade_worker" {
           done
         done
 
-        echo "Worker Nodes upgraded successfully"
+        printf '%s\n' "Worker Nodes upgraded successfully"
       else
-        echo "Cluster not initialized, skipping Worker Node upgrade"
+        printf '%s\n' "Cluster not initialized, skipping Worker Node upgrade"
       fi
     EOT
 
@@ -247,7 +247,7 @@ resource "terraform_data" "upgrade_cluster_autoscaler" {
       printf '%s' "$TALOSCONFIG" > "$talosconfig"
 
       if ${local.cluster_initialized}; then
-        echo "Start upgrading Cluster Autoscaler Nodes"
+        printf '%s\n' "Start upgrading Cluster Autoscaler Nodes"
 
         retry=1
         while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.talos_primary_node_private_ipv4}'; do
@@ -268,9 +268,9 @@ resource "terraform_data" "upgrade_cluster_autoscaler" {
           done
         done
 
-        echo "Cluster Autoscaler Nodes upgraded successfully"
+        printf '%s\n' "Cluster Autoscaler Nodes upgraded successfully"
       else
-        echo "Cluster not initialized, skipping Cluster Autoscaler Node upgrade"
+        printf '%s\n' "Cluster not initialized, skipping Cluster Autoscaler Node upgrade"
       fi
     EOT
 
@@ -301,7 +301,7 @@ resource "terraform_data" "upgrade_kubernetes" {
       printf '%s' "$TALOSCONFIG" > "$talosconfig"
 
       if ${local.cluster_initialized}; then
-        echo "Start upgrading Kubernetes"
+        printf '%s\n' "Start upgrading Kubernetes"
 
         retry=1
         while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.talos_primary_node_private_ipv4}'; do
@@ -319,9 +319,9 @@ resource "terraform_data" "upgrade_kubernetes" {
           ${local.talosctl_retry_snippet}
         done
 
-        echo "Kubernetes upgraded successfully"
+        printf '%s\n' "Kubernetes upgraded successfully"
       else
-        echo "Cluster not initialized, skipping Kubernetes upgrade"
+        printf '%s\n' "Cluster not initialized, skipping Kubernetes upgrade"
       fi
     EOT
 
@@ -408,7 +408,7 @@ resource "terraform_data" "talos_machine_configuration_apply_cluster_autoscaler"
           machine_config=$(mktemp)
           trap 'rm -f "$machine_config"' EXIT HUP INT TERM QUIT PIPE
 
-          echo "Applying machine configuration to Cluster Autoscaler Node: $host"
+          printf '%s\n' "Applying machine configuration to Cluster Autoscaler Node: $host"
           envname="TALOS_MC_$(printf '%s' "$host" | tr . _)"
           eval "machine_config_value=\$${$envname}"
           printf '%s' "$machine_config_value" > "$machine_config"
@@ -469,7 +469,7 @@ resource "terraform_data" "synchronize_manifests" {
       printf '%s' "$TALOSCONFIG" > "$talosconfig"
 
       if ${local.cluster_initialized}; then
-        echo "Start synchronizing manifests"
+        printf '%s\n' "Start synchronizing manifests"
         retry=1
         while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.talos_primary_node_private_ipv4}'; do
           ${local.talosctl_retry_snippet}
@@ -486,9 +486,9 @@ resource "terraform_data" "synchronize_manifests" {
           ${local.talosctl_retry_snippet}
         done
 
-        echo "Manifests synchronized successfully"
+        printf '%s\n' "Manifests synchronized successfully"
       else
-        echo "Cluster not initialized, skipping manifest synchronization"
+        printf '%s\n' "Cluster not initialized, skipping manifest synchronization"
       fi
     EOT
 

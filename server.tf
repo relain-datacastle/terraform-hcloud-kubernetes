@@ -215,11 +215,11 @@ data "external" "talos_member" {
             )
           }'
         else
-          echo "talosctl failed" >&2
+          printf '%s\n' "talosctl failed" >&2
           exit 1
         fi
       else
-        echo '{"control_plane":"[]","cluster_autoscaler":"[]","worker":"[]"}'
+        printf '%s\n' '{"control_plane":"[]","cluster_autoscaler":"[]","worker":"[]"}'
       fi
     EOT
   ]
