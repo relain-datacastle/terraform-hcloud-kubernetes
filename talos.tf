@@ -89,11 +89,10 @@ locals {
   )
   talosctl_retry_snippet = join(" ",
     [
-      "[ \"$retry\" -gt ${local.talosctl_retry_count} ] && exit 1 ||",
-      "{ printf '%s\n' \"Retry $retry/${local.talosctl_retry_count}...\"; retry=$((retry + 1)); sleep 10; }"
+      "[ \"$retry\" -gt ${var.talosctl_retry_count} ] && exit 1 ||",
+      "{ printf '%s\n' \"Retry $retry/${var.talosctl_retry_count}...\"; retry=$((retry + 1)); sleep 10; }"
     ]
   )
-  talosctl_retry_count = 5
 
   # Cluster Status
   cluster_initialized = length(data.hcloud_certificates.state.certificates) > 0

@@ -108,6 +108,17 @@ variable "talosctl_version_check_enabled" {
   description = "Controls whether a preflight check verifies the local talosctl client version before provisioning."
 }
 
+variable "talosctl_retry_count" {
+  type        = number
+  default     = 5
+  description = "Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability."
+
+  validation {
+    condition     = var.talosctl_retry_count >= 0
+    error_message = "The talosctl retry count must be at least 0."
+  }
+}
+
 
 # Network Configuration
 variable "network_ipv4_cidr" {
