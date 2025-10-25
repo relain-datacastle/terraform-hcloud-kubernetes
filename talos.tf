@@ -141,19 +141,19 @@ resource "terraform_data" "upgrade_control_plane" {
 
         set -- ${join(" ", local.control_plane_private_ipv4_list)}
         for host in "$@"; do
-          echo "Checking node $host..."
+          printf '%s\n' "Checking node $host..."
 
-          current_version=$(talosctl --talosconfig "$talosconfig" get version -n "$host" -o json | jq -r '.spec.version // empty')
+          current_version=$(talosctl --talosconfig "$talosconfig" get version -n "$host" -o jsonpath='{.spec.version}' 2>/dev/null || echo "")
           current_schematic=$(talosctl --talosconfig "$talosconfig" get extensions -n "$host" -o json \
-            | jq -r 'select(.spec.metadata.name=="schematic") | .spec.metadata.version' | head -n1 || true)
+            | awk '/"name": "schematic"/{flag=1} flag && /"version":/{gsub(/.*"version": "|".*/,"",$0); print; exit}' || true)
 
           # Skips upgrading the node if talos version and schematic matches
           if [ "$${current_version:-}" = "${var.talos_version}" ] && [ "$${current_schematic:-}" = "${local.talos_schematic_id}" ]; then
-            echo "Node $host already at target version and schematic — skipping upgrade"
+            printf '%s\n' "Node $host already at target version and schematic — skipping upgrade"
             continue
           fi
 
-          echo "Upgrading $host to ${var.talos_version} / schematic ${local.talos_schematic_id}..."
+          printf '%s\n' "Upgrading $host to ${var.talos_version} / schematic ${local.talos_schematic_id}..."
           retry=1
           while ! ${local.talosctl_upgrade_command}; do
             ${local.talosctl_retry_snippet}
@@ -164,7 +164,7 @@ resource "terraform_data" "upgrade_control_plane" {
           while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n "$host"; do
             ${local.talosctl_retry_snippet}
           done
-          echo "Node $host upgraded successfully"
+          printf '%s\n' "Node $host upgraded successfully"
         done
 
         printf '%s\n' "Control Plane Nodes upgraded successfully"
@@ -211,19 +211,19 @@ resource "terraform_data" "upgrade_worker" {
 
         set -- ${join(" ", local.worker_private_ipv4_list)}
         for host in "$@"; do
-          echo "Checking node $host..."
+          printf '%s\n' "Checking node $host..."
 
-          current_version=$(talosctl --talosconfig "$talosconfig" get version -n "$host" -o json | jq -r '.spec.version // empty')
+          current_version=$(talosctl --talosconfig "$talosconfig" get version -n "$host" -o jsonpath='{.spec.version}' 2>/dev/null || echo "")
           current_schematic=$(talosctl --talosconfig "$talosconfig" get extensions -n "$host" -o json \
-            | jq -r 'select(.spec.metadata.name=="schematic") | .spec.metadata.version' | head -n1 || true)
+            | awk '/"name": "schematic"/{flag=1} flag && /"version":/{gsub(/.*"version": "|".*/,"",$0); print; exit}' || true)
 
           # Skips upgrading the node if talos version and schematic matches
           if [ "$${current_version:-}" = "${var.talos_version}" ] && [ "$${current_schematic:-}" = "${local.talos_schematic_id}" ]; then
-            echo "Node $host already at target version and schematic — skipping upgrade"
+            printf '%s\n' "Node $host already at target version and schematic — skipping upgrade"
             continue
           fi
 
-          echo "Upgrading $host to ${var.talos_version} / schematic ${local.talos_schematic_id}..."
+          printf '%s\n' "Upgrading $host to ${var.talos_version} / schematic ${local.talos_schematic_id}..."
           retry=1
           while ! ${local.talosctl_upgrade_command}; do
             ${local.talosctl_retry_snippet}
@@ -234,7 +234,7 @@ resource "terraform_data" "upgrade_worker" {
           while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.talos_primary_node_private_ipv4}'; do
             ${local.talosctl_retry_snippet}
           done
-          echo "Node $host upgraded successfully"
+          printf '%s\n' "Node $host upgraded successfully"
         done
 
         printf '%s\n' "Worker Nodes upgraded successfully"
@@ -283,19 +283,19 @@ resource "terraform_data" "upgrade_cluster_autoscaler" {
 
         set -- ${join(" ", local.cluster_autoscaler_private_ipv4_list)}
         for host in "$@"; do
-          echo "Checking node $host..."
+          printf '%s\n' "Checking node $host..."
 
-          current_version=$(talosctl --talosconfig "$talosconfig" get version -n "$host" -o json | jq -r '.spec.version // empty')
+          current_version=$(talosctl --talosconfig "$talosconfig" get version -n "$host" -o jsonpath='{.spec.version}' 2>/dev/null || echo "")
           current_schematic=$(talosctl --talosconfig "$talosconfig" get extensions -n "$host" -o json \
-            | jq -r 'select(.spec.metadata.name=="schematic") | .spec.metadata.version' | head -n1 || true)
+            | awk '/"name": "schematic"/{flag=1} flag && /"version":/{gsub(/.*"version": "|".*/,"",$0); print; exit}' || true)
 
           # Skips upgrading the node if talos version and schematic matches
           if [ "$${current_version:-}" = "${var.talos_version}" ] && [ "$${current_schematic:-}" = "${local.talos_schematic_id}" ]; then
-            echo "Node $host already at target version and schematic — skipping upgrade"
+            printf '%s\n' "Node $host already at target version and schematic — skipping upgrade"
             continue
           fi
 
-          echo "Upgrading $host to ${var.talos_version} / schematic ${local.talos_schematic_id}..."
+          printf '%s\n' "Upgrading $host to ${var.talos_version} / schematic ${local.talos_schematic_id}..."
           retry=1
           while ! ${local.talosctl_upgrade_command}; do
             ${local.talosctl_retry_snippet}
@@ -306,7 +306,7 @@ resource "terraform_data" "upgrade_cluster_autoscaler" {
           while ${var.cluster_healthcheck_enabled} && ! ${local.talosctl_health_check_command} -n '${local.talos_primary_node_private_ipv4}'; do
             ${local.talosctl_retry_snippet}
           done
-          echo "Node $host upgraded successfully"
+          printf '%s\n' "Node $host upgraded successfully"
         done
 
         printf '%s\n' "Cluster Autoscaler Nodes upgraded successfully"
