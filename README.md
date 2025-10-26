@@ -24,14 +24,14 @@
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/network/members">
     <img src="https://img.shields.io/github/forks/hcloud-k8s/terraform-hcloud-kubernetes" alt="forks" />
   </a>
+  <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/discussions">
+    <img src="https://img.shields.io/github/discussions/hcloud-k8s/terraform-hcloud-kubernetes?logo=github&label=discussions" alt="discussions" />
+  </a>
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/issues/">
     <img src="https://img.shields.io/github/issues/hcloud-k8s/terraform-hcloud-kubernetes?logo=github" alt="open issues" />
   </a>
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/pulls">
     <img src="https://img.shields.io/github/issues-pr/hcloud-k8s/terraform-hcloud-kubernetes?logo=github" alt="open pull requests" />
-  </a>
-  <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/discussions">
-    <img src="https://img.shields.io/github/discussions/hcloud-k8s/terraform-hcloud-kubernetes?logo=github&label=discussions" alt="discussions" />
   </a>
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/hcloud-k8s/terraform-hcloud-kubernetes?logo=github" alt="license" />
