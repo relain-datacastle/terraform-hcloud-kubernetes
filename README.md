@@ -1060,7 +1060,7 @@ The [Talos Terraform Provider](https://registry.terraform.io/providers/siderolab
 In this module, upgrades are conducted with care. You will consistently receive the most tested and compatible releases of all components, avoiding the latest untested or incompatible releases that could disrupt your cluster.
 
 > [!WARNING]
-> Do not change any software versions in this project on your own. Each component is tailored to ensure compatibility with new Kubernetes releases. This project specifies versions that are supported and have been thoroughly tested to work together.
+> It is not recommended to change any software versions in this project on your own. Each component is specifically configured for compatibility with new Kubernetes releases. The specified versions are supported and have been tested to work together.
 
 <!--
 - Talos/K8s: https://github.com/siderolabs/talos/blob/release-1.6/pkg/machinery/constants/constants.go
