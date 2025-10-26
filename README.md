@@ -15,14 +15,17 @@
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/commit/main">
     <img src="https://img.shields.io/github/last-commit/hcloud-k8s/terraform-hcloud-kubernetes?logo=github" alt="last update" />
   </a>
-  <a href="https://registry.terraform.io/modules/hcloud-k8s/kubernetes/hcloud">
-    <img src="https://img.shields.io/terraform/module/dy/hcloud-k8s/kubernetes/hcloud?logo=terraform" alt="Terraform Registry downloads (yearly)" />
-  </a>
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/stargazers">
     <img src="https://img.shields.io/github/stars/hcloud-k8s/terraform-hcloud-kubernetes" alt="stars" />
   </a>
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/network/members">
     <img src="https://img.shields.io/github/forks/hcloud-k8s/terraform-hcloud-kubernetes" alt="forks" />
+  </a>
+  <a href="https://search.opentofu.org/module/hcloud-k8s/kubernetes/hcloud">
+    <img src="https://img.shields.io/badge/OpenTofu%20Registry-module-blue?logo=opentofu" alt="OpenTofu module" />
+  </a>
+  <a href="https://registry.terraform.io/modules/hcloud-k8s/kubernetes/hcloud">
+    <img src="https://img.shields.io/terraform/module/dy/hcloud-k8s/kubernetes/hcloud?logo=terraform&label=Terraform%20Registry" alt="Terraform Registry downloads (yearly)" />
   </a>
   <a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/issues/">
     <img src="https://img.shields.io/github/issues/hcloud-k8s/terraform-hcloud-kubernetes?logo=github" alt="open issues" />
