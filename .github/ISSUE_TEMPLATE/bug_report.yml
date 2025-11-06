@@ -36,7 +36,7 @@ body:
     attributes:
       label: Minimal Module Configuration
       description: Show the smallest possible config that reproduces the issue (redact secrets)
-      value: |
+      value: |-
         ```hcl
         module "kubernetes" {
            # Configuration
