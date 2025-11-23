@@ -52,7 +52,7 @@
 # 📔 Overview
 - [🌟 About the Project](#-about-the-project)
 - [🚀 Getting Started](#-getting-started)
-- [⚒️ Advanced Configuration](#%EF%B8%8F-advanced-configuration)
+- [⚙️ Advanced Configuration](#%EF%B8%8F-advanced-configuration)
 - [♻️ Lifecycle](#%EF%B8%8F-lifecycle)
 - [👋 Community](#-community)
 - [❤️ Support this Project](#%EF%B8%8F-support-this-project)
