@@ -1104,7 +1104,7 @@ If you'd like to support this project, please consider leaving a ⭐ on GitHub!<
   <img
     src="https://img.shields.io/github/stars/hcloud-k8s/terraform-hcloud-kubernetes"
     alt="Stars"
-    height="28"
+    width="105"
   />
 </a>
 
