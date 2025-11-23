@@ -56,7 +56,7 @@
 - [♻️ Lifecycle](#%EF%B8%8F-lifecycle)
 - [👋 Community](#-community)
 - [❤️ Support this Project](#%EF%B8%8F-support-this-project)
-- [📎 Project Meta](#-project-meta)
+- [📎 Project Info](#-project-info)
 
 <!-- About the Project -->
 ## 🌟 About the Project
@@ -1112,7 +1112,7 @@ If you'd like to support this project, please consider leaving a ⭐ on GitHub!<
 > If you don’t have a Hetzner account yet, you can use this [Hetzner Cloud Referral Link](https://hetzner.cloud/?ref=GMylKeDmqtsD) to claim a €20 credit and support this project at the same time.
 
 <!-- Project Meta -->
-## 📎 Project Meta
+## 📎 Project Info
 This project is built for the public and will always remain fully [open source](https://opensource.org).
 
 <!-- License -->
