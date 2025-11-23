@@ -65,7 +65,7 @@ Hcloud Kubernetes is a Terraform module for deploying a fully declarative, manag
 This project is committed to production-grade configuration and lifecycle management, ensuring all components are set up for high availability. It includes a curated selection of widely used and officially recognized Kubernetes components. If you encounter any issues, suboptimal settings, or missing elements, please file an [issue](https://github.com/hcloud-k8s/terraform-hcloud-kubernetes/issues) to help us improve this project.
 
 > [!TIP]
-> If you don’t have a Hetzner account yet, you can use this [Hetzner Cloud Referral Link](https://hetzner.cloud/?ref=GMylKeDmqtsD) to claim a €20 credit and support this project at the same time.
+> If you don’t have a Hetzner account yet, you can use this [Hetzner Cloud Referral Link](https://hetzner.cloud/?ref=GMylKeDmqtsD) to claim a €20 credit and support this project.
 
 <!-- Features -->
 ### ✨ Features
@@ -1099,11 +1099,17 @@ Contributions are always welcome!
 
 <!-- Support this Project -->
 ## ❤️ Support this Project
-If you'd like to support this project, please consider leaving a [![Star](https://img.shields.io/github/stars/hcloud-k8s/terraform-hcloud-kubernetes?logo=none&label=⭐)](https://github.com/hcloud-k8s/terraform-hcloud-kubernetes)
- on GitHub!
+If you'd like to support this project, please consider leaving a ⭐ on GitHub!<br>
+<a href="https://github.com/hcloud-k8s/terraform-hcloud-kubernetes">
+  <img
+    src="https://img.shields.io/github/stars/hcloud-k8s/terraform-hcloud-kubernetes"
+    alt="Stars"
+    height="28"
+  />
+</a>
 
 > [!TIP]
-> If you don’t have a Hetzner account yet, you can use this [Hetzner Cloud Referral Link](https://hetzner.cloud/?ref=GMylKeDmqtsD) to claim a €20 credit and support this project at the same time.
+> If you don’t have a Hetzner account yet, you can use this [Hetzner Cloud Referral Link](https://hetzner.cloud/?ref=GMylKeDmqtsD) to claim a €20 credit and support this project.
 
 <!-- Project Meta -->
 ## 📎 Project Meta
