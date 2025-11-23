@@ -52,10 +52,10 @@
 # 📔 Overview
 - [🌟 About the Project](#-about-the-project)
 - [🚀 Getting Started](#-getting-started)
-- [⚒️ Advanced Configuration](#-advanced-configuration)
-- [♻️ Lifecycle](#-lifecycle)
+- [⚒️ Advanced Configuration](#%EF%B8%8F-advanced-configuration)
+- [♻️ Lifecycle](#%EF%B8%8F-lifecycle)
 - [👋 Community](#-community)
-- [❤️ Support this Project](#-support-this-project)
+- [❤️ Support this Project](#%EF%B8%8F-support-this-project)
 - [📎 Project Meta](#-project-meta)
 
 <!-- About the Project -->
@@ -144,7 +144,7 @@ Talos Linux is a secure, minimal, and immutable OS for Kubernetes, removing SSH 
 **Encryption at Rest:** In this module, the [STATE](https://www.talos.dev/latest/learn-more/architecture/#file-system-partitions) and [EPHEMERAL](https://www.talos.dev/latest/learn-more/architecture/#file-system-partitions) partitions are encrypted by default with [Talos Disk Encryption](https://www.talos.dev/latest/talos-guides/configuration/disk-encryption/) using LUKS2. Each node is secured with individual encryption keys derived from its unique `nodeID`.
 
 <!-- Getting Started -->
-## 	🚀 Getting Started
+## 🚀 Getting Started
 
 <!-- Prerequisites -->
 ### ✔️ Prerequisites
@@ -250,7 +250,7 @@ tofu destroy
 ```
 
 <!-- Advanced Configuration -->
-## ⚒️ Advanced Configuration
+## ⚙️ Advanced Configuration
 
 <!-- Cluster Access -->
 <details>
