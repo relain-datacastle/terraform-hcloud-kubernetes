@@ -94,6 +94,12 @@ variable "cluster_delete_protection" {
   description = "Adds delete protection for resources that support it."
 }
 
+variable "cluster_allow_scheduling_on_control_planes" {
+  type        = bool
+  default     = null
+  description = "Allow scheduling on control plane nodes. If this is false, scheduling on control plane nodes is explicitly disabled. Defaults to true if there are no workers present."
+}
+
 
 # Client Tools
 variable "client_prerequisites_check_enabled" {
