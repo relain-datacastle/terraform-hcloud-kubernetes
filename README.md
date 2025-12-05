@@ -78,7 +78,7 @@ This setup offers a production-ready, best-practice Kubernetes deployment on Het
 - **Plug-and-Play:** Optional Ingress Controller and Cert Manager for rapid workload deployment.
 - **Dual-Stack Support:** Load Balancers with native IPv4 and IPv6 for efficient traffic routing.
 - **Cluster Traffic Isolation:** All internal cluster traffic is confined to an isolated Hetzner Cloud Network.
-- **Built-in Protection:** Security-first design with perimeter firewall and encryption in transit and at rest.
+- **Network & Data Security:** Security-first design with perimeter firewall and encryption in transit and at rest.
 
 <!-- Components -->
 ### 📦 Components
