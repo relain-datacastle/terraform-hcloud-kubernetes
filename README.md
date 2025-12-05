@@ -70,15 +70,16 @@ This project is committed to production-grade configuration and lifecycle manage
 <!-- Features -->
 ### ✨ Features
 
-This setup offers a production-ready, best-practice Kubernetes deployment on Hetzner Cloud featuring:
-- **Fully Deterministic:** Uses Talos Linux for a completely declarative, immutable Kubernetes cluster.
-- **Cross-Architecture:** Supports AMD64 and ARM64 with automated image uploads to Hetzner Cloud.
-- **High Availability:** Production-grade high availability across all components for consistent, reliable performance.
-- **Autoscaling:** Supports automatic scaling of nodes and pods to handle dynamic workload demands.
-- **Plug-and-Play:** Optional Ingress Controller and Cert Manager for rapid workload deployment.
-- **Dual-Stack Support:** Load Balancers with native IPv4 and IPv6 for efficient traffic routing.
-- **Cluster Traffic Isolation:** All internal cluster traffic is confined to an isolated Hetzner Cloud Network.
-- **Network & Data Security:** Security-first design with perimeter firewall and encryption in transit and at rest.
+Provision a highly available and secure Kubernetes cluster on Hetzner Cloud, defined by these key features:
+
+* **Immutable Infrastructure:** Utilizes Talos Linux to provide a fully declarative, completely immutable Kubernetes cluster.
+* **Architecture Flexibility:** Supports deployment on both **AMD64** and **ARM64** instances with automated image synchronization.
+* **Maximized Uptime:** Delivers high availability across all control plane and worker components for consistent, reliable performance.
+* **Elastic Scaling:** Supports automatic scaling of both **nodes** and **pods** to effortlessly accommodate dynamic workloads.
+* **Quick Start Addons:** Optional, pre-integrated Ingress Controller and Cert Manager simplifies the rapid deployment of applications.
+* **Dual-Stack Networking:** Load Balancers offer native support for both **IPv4** and **IPv6** for modern, efficient traffic management.
+* **Isolated Network Fabric:** Ensures all internal cluster traffic is confined to an isolated, private Hetzner Cloud Network.
+* **Comprehensive Security:** Enforces a security-first design with perimeter firewalls and encryption applied to data both in transit and at rest.
 
 <!-- Components -->
 ### 📦 Components
