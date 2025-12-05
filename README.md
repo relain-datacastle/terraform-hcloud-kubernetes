@@ -77,6 +77,7 @@ This setup offers a production-ready, best-practice Kubernetes deployment on Het
 - **Autoscaling:** Supports automatic scaling of nodes and pods to handle dynamic workload demands.
 - **Plug-and-Play:** Optional Ingress Controller and Cert Manager for rapid workload deployment.
 - **Dual-Stack Support:** Load Balancers with native IPv4 and IPv6 for efficient traffic routing.
+- **Cluster Traffic Isolation:** All internal cluster traffic is confined to an isolated Hetzner Cloud Network.
 - **Built-in Protection:** Security-first design with perimeter firewall and encryption in transit and at rest.
 
 <!-- Components -->
@@ -139,9 +140,9 @@ Talos Linux is a secure, minimal, and immutable OS for Kubernetes, removing SSH 
 
 **Firewall Protection:** This module uses [Hetzner Cloud Firewalls](https://docs.hetzner.com/cloud/firewalls/) to manage external access to nodes. For internal pod-to-pod communication, support for Kubernetes Network Policies is provided through [Cilium CNI](https://docs.cilium.io/en/stable/network/kubernetes/policy/).
 
-**Encryption in Transit:** In this module, all pod network traffic is encrypted by default using [WireGuard (Default) or IPSec via Cilium CNI](https://cilium.io/use-cases/transparent-encryption/). It includes automatic key rotation and efficient in-kernel encryption, covering all traffic types.
+**Encryption in Transit:** All pod network traffic is transparently encrypted by Cilium using [WireGuard](https://docs.cilium.io/en/latest/security/network/encryption-wireguard/) (default) or [IPSec](https://docs.cilium.io/en/latest/security/network/encryption-ipsec/), with automatic key rotation and in-kernel encryption for all traffic.
 
-**Encryption at Rest:** In this module, the [STATE](https://www.talos.dev/latest/learn-more/architecture/#file-system-partitions) and [EPHEMERAL](https://www.talos.dev/latest/learn-more/architecture/#file-system-partitions) partitions are encrypted by default with [Talos Disk Encryption](https://www.talos.dev/latest/talos-guides/configuration/disk-encryption/) using LUKS2. Each node is secured with individual encryption keys derived from its unique `nodeID`.
+**Encryption at Rest:** The [STATE](https://www.talos.dev/latest/learn-more/architecture/#file-system-partitions) and [EPHEMERAL](https://www.talos.dev/latest/learn-more/architecture/#file-system-partitions) partitions are encrypted by default with [Talos Disk Encryption](https://www.talos.dev/latest/talos-guides/configuration/disk-encryption/) using LUKS2. Each node is secured with individual encryption keys derived from its unique `nodeID`.
 
 <!-- Getting Started -->
 ## 🚀 Getting Started
