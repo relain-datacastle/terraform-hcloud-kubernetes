@@ -75,6 +75,9 @@ data "helm_template" "cilium" {
       kubeProxyReplacement                = var.cilium_kube_proxy_replacement_enabled
       kubeProxyReplacementHealthzBindAddr = var.cilium_kube_proxy_replacement_enabled ? "0.0.0.0:10256" : ""
       installNoConntrackIptablesRules     = var.cilium_kube_proxy_replacement_enabled && var.cilium_routing_mode == "native"
+      socketLB = {
+        hostNamespaceOnly = var.cilium_socket_lb_host_namespace_only_enabled
+      }
       cgroup = {
         autoMount = { enabled = false }
         hostRoot  = "/sys/fs/cgroup"

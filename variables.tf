@@ -1285,6 +1285,12 @@ variable "cilium_kube_proxy_replacement_enabled" {
   description = "Enables Cilium's eBPF kube-proxy replacement."
 }
 
+variable "cilium_socket_lb_host_namespace_only_enabled" {
+  type        = bool
+  default     = false
+  description = "Limit Cilium's socket-level load-balancing to the host namespace only."
+}
+
 variable "cilium_routing_mode" {
   type        = string
   description = "Cilium routing mode (e.g., 'native', 'tunnel', etc.)"
