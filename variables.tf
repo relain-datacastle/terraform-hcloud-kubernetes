@@ -1279,6 +1279,18 @@ variable "cilium_ipsec_key_id" {
   }
 }
 
+variable "cilium_kube_proxy_replacement_enabled" {
+  type        = bool
+  default     = true
+  description = "Enables Cilium's eBPF kube-proxy replacement."
+}
+
+variable "cilium_socket_lb_host_namespace_only_enabled" {
+  type        = bool
+  default     = false
+  description = "Limit Cilium's socket-level load-balancing to the host namespace only."
+}
+
 variable "cilium_routing_mode" {
   type        = string
   description = "Cilium routing mode (e.g., 'native', 'tunnel', etc.)"
@@ -1303,6 +1315,11 @@ variable "cilium_egress_gateway_enabled" {
   type        = bool
   default     = false
   description = "Enables egress gateway to redirect and SNAT the traffic that leaves the cluster."
+
+  validation {
+    condition     = !var.cilium_egress_gateway_enabled || var.cilium_kube_proxy_replacement_enabled
+    error_message = "cilium_egress_gateway_enabled can only be true when cilium_kube_proxy_replacement_enabled is true, because Cilium Egress Gateway requires kubeProxyReplacement=true and BPF masquerading."
+  }
 }
 
 variable "cilium_service_monitor_enabled" {
