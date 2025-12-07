@@ -36,6 +36,7 @@ locals {
 
   talos_image_extensions = distinct(
     concat(
+      ["siderolabs/qemu-guest-agent"],
       var.talos_image_extensions,
       var.longhorn_enabled ? local.talos_image_extentions_longhorn : []
     )
@@ -84,26 +85,6 @@ data "talos_image_factory_urls" "arm64" {
   architecture  = "arm64"
 }
 
-data "hcloud_image" "amd64" {
-  count = local.amd64_image_required ? 1 : 0
-
-  with_selector     = local.image_label_selector
-  with_architecture = "x86"
-  most_recent       = true
-
-  depends_on = [terraform_data.amd64_image]
-}
-
-data "hcloud_image" "arm64" {
-  count = local.arm64_image_required ? 1 : 0
-
-  with_selector     = local.image_label_selector
-  with_architecture = "arm"
-  most_recent       = true
-
-  depends_on = [terraform_data.arm64_image]
-}
-
 data "hcloud_images" "amd64" {
   count = local.amd64_image_required ? 1 : 0
 
@@ -121,7 +102,14 @@ data "hcloud_images" "arm64" {
 }
 
 resource "terraform_data" "packer_init" {
-  triggers_replace = ["${sha1(file("${path.module}/packer/requirements.pkr.hcl"))}"]
+  triggers_replace = [
+    "${sha1(file("${path.module}/packer/requirements.pkr.hcl"))}",
+    var.cluster_name,
+    var.talos_version,
+    local.talos_schematic_id,
+    local.amd64_image_required,
+    local.arm64_image_required
+  ]
 
   provisioner "local-exec" {
     when        = create
@@ -129,6 +117,8 @@ resource "terraform_data" "packer_init" {
     working_dir = "${path.module}/packer/"
     command     = "packer init -upgrade requirements.pkr.hcl"
   }
+
+  depends_on = [data.external.client_prerequisites_check]
 }
 
 resource "terraform_data" "amd64_image" {
@@ -149,6 +139,8 @@ resource "terraform_data" "amd64_image" {
         "${length(data.hcloud_images.amd64[0].images) > 0} ||",
         "packer build -force",
         "-var 'cluster_name=${var.cluster_name}'",
+        "-var 'server_type=${var.packer_amd64_builder.server_type}'",
+        "-var 'server_location=${var.packer_amd64_builder.server_location}'",
         "-var 'talos_version=${var.talos_version}'",
         "-var 'talos_schematic_id=${local.talos_schematic_id}'",
         "-var 'talos_image_url=${local.talos_amd64_image_url}'",
@@ -160,7 +152,10 @@ resource "terraform_data" "amd64_image" {
     }
   }
 
-  depends_on = [terraform_data.packer_init]
+  depends_on = [
+    data.external.client_prerequisites_check,
+    terraform_data.packer_init
+  ]
 }
 
 resource "terraform_data" "arm64_image" {
@@ -181,6 +176,8 @@ resource "terraform_data" "arm64_image" {
         "${length(data.hcloud_images.arm64[0].images) > 0} ||",
         "packer build -force",
         "-var 'cluster_name=${var.cluster_name}'",
+        "-var 'server_type=${var.packer_arm64_builder.server_type}'",
+        "-var 'server_location=${var.packer_arm64_builder.server_location}'",
         "-var 'talos_version=${var.talos_version}'",
         "-var 'talos_schematic_id=${local.talos_schematic_id}'",
         "-var 'talos_image_url=${local.talos_arm64_image_url}'",
@@ -192,5 +189,28 @@ resource "terraform_data" "arm64_image" {
     }
   }
 
-  depends_on = [terraform_data.packer_init]
+  depends_on = [
+    data.external.client_prerequisites_check,
+    terraform_data.packer_init
+  ]
+}
+
+data "hcloud_image" "amd64" {
+  count = local.amd64_image_required ? 1 : 0
+
+  with_selector     = local.image_label_selector
+  with_architecture = "x86"
+  most_recent       = true
+
+  depends_on = [terraform_data.amd64_image]
+}
+
+data "hcloud_image" "arm64" {
+  count = local.arm64_image_required ? 1 : 0
+
+  with_selector     = local.image_label_selector
+  with_architecture = "arm"
+  most_recent       = true
+
+  depends_on = [terraform_data.arm64_image]
 }

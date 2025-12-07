@@ -1,20 +1,20 @@
 terraform {
-  required_version = ">=1.7.0"
+  required_version = ">=1.9.0"
 
   required_providers {
     talos = {
       source  = "siderolabs/talos"
-      version = "0.8.0"
+      version = "0.9.0"
     }
 
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.50.1"
+      version = "1.57.0"
     }
 
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.17.0"
+      version = "~> 3.1.0"
     }
 
     http = {
@@ -26,16 +26,10 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.1.0"
     }
-  }
-}
 
-provider "hcloud" {
-  token         = var.hcloud_token
-  poll_interval = "2s"
-}
-
-provider "helm" {
-  kubernetes {
-    config_path = "kubeconfig"
+    random = {
+      source  = "hashicorp/random"
+      version = "~>3.7.2"
+    }
   }
 }

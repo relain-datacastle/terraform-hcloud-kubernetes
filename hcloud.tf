@@ -34,12 +34,14 @@ data "helm_template" "hcloud_ccm" {
       nodeSelector = { "node-role.kubernetes.io/control-plane" : "" }
       networking = {
         enabled     = true
-        clusterCIDR = local.pod_ipv4_cidr
+        clusterCIDR = local.network_pod_ipv4_cidr
       }
       env = {
+        HCLOUD_LOAD_BALANCERS_ENABLED                 = { value = tostring(var.hcloud_ccm_load_balancers_enabled) }
         HCLOUD_LOAD_BALANCERS_USE_PRIVATE_IP          = { value = "true" }
         HCLOUD_LOAD_BALANCERS_DISABLE_PRIVATE_INGRESS = { value = "true" }
         HCLOUD_LOAD_BALANCERS_LOCATION                = { value = local.hcloud_load_balancer_location }
+        HCLOUD_NETWORK_ROUTES_ENABLED                 = { value = tostring(var.hcloud_ccm_network_routes_enabled) }
       }
     }),
     yamlencode(var.hcloud_ccm_helm_values)
@@ -54,6 +56,46 @@ locals {
 }
 
 # Hcloud CSI
+resource "random_bytes" "hcloud_csi_encryption_key" {
+  count  = var.hcloud_csi_enabled ? 1 : 0
+  length = 32
+}
+
+locals {
+  hcloud_csi_secret_manifest = var.hcloud_csi_enabled ? {
+    apiVersion = "v1"
+    kind       = "Secret"
+    type       = "Opaque"
+    metadata = {
+      name      = "hcloud-csi-secret"
+      namespace = "kube-system"
+    }
+    data = {
+      encryption-passphrase = (
+        var.hcloud_csi_encryption_passphrase != null ?
+        base64encode(var.hcloud_csi_encryption_passphrase) :
+        base64encode(random_bytes.hcloud_csi_encryption_key[0].hex)
+      )
+    }
+  } : null
+
+  hcloud_csi_storage_classes = [
+    for class in var.hcloud_csi_storage_classes : {
+      name                = class.name
+      reclaimPolicy       = class.reclaimPolicy
+      defaultStorageClass = class.defaultStorageClass
+
+      extraParameters = merge(
+        class.encrypted ? {
+          "csi.storage.k8s.io/node-publish-secret-name"      = "hcloud-csi-secret"
+          "csi.storage.k8s.io/node-publish-secret-namespace" = "kube-system"
+        } : {},
+        class.extraParameters
+      )
+    }
+  ]
+}
+
 data "helm_template" "hcloud_csi" {
   count = var.hcloud_csi_enabled ? 1 : 0
 
@@ -69,11 +111,16 @@ data "helm_template" "hcloud_csi" {
     yamlencode({
       controller = {
         replicaCount = local.control_plane_sum > 1 ? 2 : 1
+        podDisruptionBudget = {
+          create         = true
+          minAvailable   = null
+          maxUnavailable = "1"
+        }
         topologySpreadConstraints = [
           {
             topologyKey       = "kubernetes.io/hostname"
             maxSkew           = 1
-            whenUnsatisfiable = local.control_plane_sum > 2 ? "DoNotSchedule" : "ScheduleAnyway"
+            whenUnsatisfiable = "DoNotSchedule"
             labelSelector = {
               matchLabels = {
                 "app.kubernetes.io/name"      = "hcloud-csi"
@@ -81,6 +128,7 @@ data "helm_template" "hcloud_csi" {
                 "app.kubernetes.io/component" = "controller"
               }
             }
+            matchLabelKeys = ["pod-template-hash"]
           }
         ]
         nodeSelector = { "node-role.kubernetes.io/control-plane" : "" }
@@ -91,7 +139,9 @@ data "helm_template" "hcloud_csi" {
             operator = "Exists"
           }
         ]
+        volumeExtraLabels = var.hcloud_csi_volume_extra_labels
       }
+      storageClasses = local.hcloud_csi_storage_classes
     }),
     yamlencode(var.hcloud_csi_helm_values)
   ]
@@ -100,6 +150,10 @@ data "helm_template" "hcloud_csi" {
 locals {
   hcloud_csi_manifest = var.hcloud_csi_enabled ? {
     name     = "hcloud-csi"
-    contents = data.helm_template.hcloud_csi[0].manifest
+    contents = <<-EOF
+      ${yamlencode(local.hcloud_csi_secret_manifest)}
+      ---
+      ${data.helm_template.hcloud_csi[0].manifest}
+    EOF
   } : null
 }

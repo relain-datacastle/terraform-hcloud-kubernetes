@@ -1,5 +1,13 @@
 locals {
-  allow_scheduling_on_control_plane = ((local.worker_sum + local.cluster_autoscaler_max_sum) == 0)
+  talos_allow_scheduling_on_control_planes = coalesce(var.cluster_allow_scheduling_on_control_planes, (local.worker_sum + local.cluster_autoscaler_max_sum) == 0)
+
+  kube_oidc_configuration = var.oidc_enabled ? {
+    "oidc-issuer-url"     = var.oidc_issuer_url
+    "oidc-client-id"      = var.oidc_client_id
+    "oidc-username-claim" = var.oidc_username_claim
+    "oidc-groups-claim"   = var.oidc_groups_claim
+    "oidc-groups-prefix"  = var.oidc_groups_prefix
+  } : {}
 
   # Kubernetes Manifests for Talos
   talos_inline_manifests = concat(
@@ -13,7 +21,9 @@ locals {
     local.cert_manager_manifest != null ? [local.cert_manager_manifest] : [],
     local.ingress_nginx_manifest != null ? [local.ingress_nginx_manifest] : [],
     local.cluster_autoscaler_manifest != null ? [local.cluster_autoscaler_manifest] : [],
-    var.talos_extra_inline_manifests != null ? var.talos_extra_inline_manifests : []
+    var.talos_extra_inline_manifests != null ? var.talos_extra_inline_manifests : [],
+    local.rbac_manifest != null ? [local.rbac_manifest] : [],
+    local.oidc_manifest != null ? [local.oidc_manifest] : []
   )
   talos_manifests = concat(
     var.talos_ccm_enabled ? ["https://raw.githubusercontent.com/siderolabs/talos-cloud-controller-manager/${var.talos_ccm_version}/docs/deploy/cloud-controller-manager-daemonset.yml"] : [],
@@ -70,7 +80,7 @@ locals {
   talos_public_interface_enabled = var.talos_public_ipv4_enabled || var.talos_public_ipv6_enabled
 
   # Extra Host Entries
-  extra_host_entries = concat(
+  talos_extra_host_entries = concat(
     var.kube_api_hostname != null ? [
       {
         ip      = local.kube_api_private_ipv4
@@ -81,7 +91,7 @@ locals {
   )
 
   # Disk Encryption Configuration
-  systemDiskEncryption = merge(
+  talos_system_disk_encryption = merge(
     var.talos_state_partition_encryption_enabled ? {
       state = {
         provider = "luks2"
@@ -144,7 +154,7 @@ locals {
           extraKernelArgs = var.talos_extra_kernel_args
         }
         nodeLabels = merge(
-          local.allow_scheduling_on_control_plane ? { "node.kubernetes.io/exclude-from-external-load-balancers" = { "$patch" = "delete" } } : {},
+          local.talos_allow_scheduling_on_control_planes ? { "node.kubernetes.io/exclude-from-external-load-balancers" = { "$patch" = "delete" } } : {},
           local.control_plane_nodepools_map[node.labels.nodepool].labels
         )
         nodeAnnotations = local.control_plane_nodepools_map[node.labels.nodepool].annotations
@@ -153,6 +163,7 @@ locals {
         }
         certSANs = local.certificate_san
         network = {
+          hostname = node.name
           interfaces = concat(
             local.talos_public_interface_enabled ? [{
               interface = "eth0"
@@ -181,7 +192,7 @@ locals {
             }]
           )
           nameservers      = local.talos_nameservers
-          extraHostEntries = local.extra_host_entries
+          extraHostEntries = local.talos_extra_host_entries
         }
         kubelet = {
           extraArgs = merge(
@@ -211,7 +222,7 @@ locals {
           )
           extraMounts = local.talos_kubelet_extra_mounts
           nodeIP = {
-            validSubnets = [local.node_ipv4_cidr]
+            validSubnets = [local.network_node_ipv4_cidr]
           }
         }
         kernel = {
@@ -227,7 +238,7 @@ locals {
           var.talos_sysctls_extra_args
         )
         registries           = var.talos_registries
-        systemDiskEncryption = local.systemDiskEncryption
+        systemDiskEncryption = local.talos_system_disk_encryption
         features = {
           kubernetesTalosAPIAccess = {
             enabled = true,
@@ -247,24 +258,25 @@ locals {
         }
       }
       cluster = {
-        allowSchedulingOnControlPlanes = local.allow_scheduling_on_control_plane
+        allowSchedulingOnControlPlanes = local.talos_allow_scheduling_on_control_planes
         network = {
           dnsDomain      = var.cluster_domain
-          podSubnets     = [local.pod_ipv4_cidr]
-          serviceSubnets = [local.service_ipv4_cidr]
+          podSubnets     = [local.network_pod_ipv4_cidr]
+          serviceSubnets = [local.network_service_ipv4_cidr]
           cni            = { name = "none" }
         }
         coreDNS = {
           disabled = !var.talos_coredns_enabled
         }
         proxy = {
-          disabled = true
+          disabled = var.cilium_kube_proxy_replacement_enabled
         }
         apiServer = {
           admissionControl = var.kube_api_admission_control
           certSANs         = local.certificate_san,
           extraArgs = merge(
             { "enable-aggregator-routing" = true },
+            local.kube_oidc_configuration,
             var.kube_api_extra_args
           )
         }
@@ -310,9 +322,9 @@ locals {
         nodeAnnotations = local.worker_nodepools_map[node.labels.nodepool].annotations
         certSANs        = local.certificate_san
         network = {
+          hostname = node.name
           interfaces = concat(
             local.talos_public_interface_enabled ? [{
-
               interface = "eth0"
               dhcp      = true
               dhcpOptions = {
@@ -327,7 +339,7 @@ locals {
             }]
           )
           nameservers      = local.talos_nameservers
-          extraHostEntries = local.extra_host_entries
+          extraHostEntries = local.talos_extra_host_entries
         }
         kubelet = {
           extraArgs = merge(
@@ -357,7 +369,7 @@ locals {
           )
           extraMounts = local.talos_kubelet_extra_mounts
           nodeIP = {
-            validSubnets = [local.node_ipv4_cidr]
+            validSubnets = [local.network_node_ipv4_cidr]
           }
         }
         kernel = {
@@ -373,7 +385,7 @@ locals {
           var.talos_sysctls_extra_args
         )
         registries           = var.talos_registries
-        systemDiskEncryption = local.systemDiskEncryption
+        systemDiskEncryption = local.talos_system_disk_encryption
         features = {
           hostDNS = local.talos_host_dns
         }
@@ -387,12 +399,12 @@ locals {
       cluster = {
         network = {
           dnsDomain      = var.cluster_domain
-          podSubnets     = [local.pod_ipv4_cidr]
-          serviceSubnets = [local.service_ipv4_cidr]
+          podSubnets     = [local.network_pod_ipv4_cidr]
+          serviceSubnets = [local.network_service_ipv4_cidr]
           cni            = { name = "none" }
         }
         proxy = {
-          disabled = true
+          disabled = var.cilium_kube_proxy_replacement_enabled
         }
         discovery = local.talos_discovery
       }
@@ -413,7 +425,6 @@ locals {
         network = {
           interfaces = concat(
             local.talos_public_interface_enabled ? [{
-
               interface = "eth0"
               dhcp      = true
               dhcpOptions = {
@@ -428,7 +439,7 @@ locals {
             }]
           )
           nameservers      = local.talos_nameservers
-          extraHostEntries = local.extra_host_entries
+          extraHostEntries = local.talos_extra_host_entries
         }
         kubelet = {
           extraArgs = merge(
@@ -458,7 +469,7 @@ locals {
           )
           extraMounts = local.talos_kubelet_extra_mounts
           nodeIP = {
-            validSubnets = [local.node_ipv4_cidr]
+            validSubnets = [local.network_node_ipv4_cidr]
           }
         }
         kernel = {
@@ -474,7 +485,7 @@ locals {
           var.talos_sysctls_extra_args
         )
         registries           = var.talos_registries
-        systemDiskEncryption = local.systemDiskEncryption
+        systemDiskEncryption = local.talos_system_disk_encryption
         features = {
           hostDNS = local.talos_host_dns
         }
@@ -488,12 +499,12 @@ locals {
       cluster = {
         network = {
           dnsDomain      = var.cluster_domain
-          podSubnets     = [local.pod_ipv4_cidr]
-          serviceSubnets = [local.service_ipv4_cidr]
+          podSubnets     = [local.network_pod_ipv4_cidr]
+          serviceSubnets = [local.network_service_ipv4_cidr]
           cni            = { name = "none" }
         }
         proxy = {
-          disabled = true
+          disabled = var.cilium_kube_proxy_replacement_enabled
         }
         discovery = local.talos_discovery
       }
@@ -510,12 +521,13 @@ data "talos_machine_configuration" "control_plane" {
   kubernetes_version = var.kubernetes_version
   machine_type       = "controlplane"
   machine_secrets    = talos_machine_secrets.this.machine_secrets
-  config_patches = [
-    yamlencode(local.control_plane_talos_config_patch[each.key]),
-    yamlencode(var.control_plane_config_patches)
-  ]
-  docs     = false
-  examples = false
+  docs               = false
+  examples           = false
+
+  config_patches = concat(
+    [yamlencode(local.control_plane_talos_config_patch[each.key])],
+    [for patch in var.control_plane_config_patches : yamlencode(patch)]
+  )
 }
 
 data "talos_machine_configuration" "worker" {
@@ -527,12 +539,13 @@ data "talos_machine_configuration" "worker" {
   kubernetes_version = var.kubernetes_version
   machine_type       = "worker"
   machine_secrets    = talos_machine_secrets.this.machine_secrets
-  config_patches = [
-    yamlencode(local.worker_talos_config_patch[each.key]),
-    yamlencode(var.worker_config_patches)
-  ]
-  docs     = false
-  examples = false
+  docs               = false
+  examples           = false
+
+  config_patches = concat(
+    [yamlencode(local.worker_talos_config_patch[each.key])],
+    [for patch in var.worker_config_patches : yamlencode(patch)]
+  )
 }
 
 data "talos_machine_configuration" "cluster_autoscaler" {
@@ -544,10 +557,11 @@ data "talos_machine_configuration" "cluster_autoscaler" {
   kubernetes_version = var.kubernetes_version
   machine_type       = "worker"
   machine_secrets    = talos_machine_secrets.this.machine_secrets
-  config_patches = [
-    yamlencode(local.autoscaler_nodepool_talos_config_patch[each.key]),
-    yamlencode(var.cluster_autoscaler_config_patches)
-  ]
-  docs     = false
-  examples = false
+  docs               = false
+  examples           = false
+
+  config_patches = concat(
+    [yamlencode(local.autoscaler_nodepool_talos_config_patch[each.key])],
+    [for patch in var.cluster_autoscaler_config_patches : yamlencode(patch)]
+  )
 }

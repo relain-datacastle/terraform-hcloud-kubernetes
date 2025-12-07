@@ -9,7 +9,7 @@ locals {
 
   ingress_nginx_replicas = coalesce(
     var.ingress_nginx_replicas,
-    local.worker_sum < 4 ? 2 : 3
+    local.worker_sum < 3 ? 2 : 3
   )
 
   ingress_nginx_service_load_balancer_required = (
@@ -36,25 +36,23 @@ data "helm_template" "ingress_nginx" {
   version      = var.ingress_nginx_helm_version
   kube_version = var.kubernetes_version
 
-  set {
-    name  = "controller.admissionWebhooks.certManager.enabled"
-    value = true
-  }
-
   values = [
     yamlencode({
       controller = {
-        kind         = var.ingress_nginx_kind
-        replicaCount = local.ingress_nginx_replicas
-        topologySpreadConstraints = [
+        admissionWebhooks = {
+          certManager = {
+            enabled = true
+          }
+        }
+        kind           = var.ingress_nginx_kind
+        replicaCount   = local.ingress_nginx_replicas
+        minAvailable   = null
+        maxUnavailable = 1
+        topologySpreadConstraints = var.ingress_nginx_kind == "Deployment" ? [
           {
-            topologyKey = "kubernetes.io/hostname"
-            maxSkew     = 1
-            whenUnsatisfiable = (
-              local.worker_sum > local.ingress_nginx_replicas ?
-              "DoNotSchedule" :
-              "ScheduleAnyway"
-            )
+            topologyKey       = "kubernetes.io/hostname"
+            maxSkew           = 1
+            whenUnsatisfiable = local.worker_sum > 1 ? "DoNotSchedule" : "ScheduleAnyway"
             labelSelector = {
               matchLabels = {
                 "app.kubernetes.io/instance"  = "ingress-nginx"
@@ -62,8 +60,22 @@ data "helm_template" "ingress_nginx" {
                 "app.kubernetes.io/component" = "controller"
               }
             }
+            matchLabelKeys = ["pod-template-hash"]
+          },
+          {
+            topologyKey       = "topology.kubernetes.io/zone"
+            maxSkew           = 1
+            whenUnsatisfiable = "ScheduleAnyway"
+            labelSelector = {
+              matchLabels = {
+                "app.kubernetes.io/instance"  = "ingress-nginx"
+                "app.kubernetes.io/name"      = "ingress-nginx"
+                "app.kubernetes.io/component" = "controller"
+              }
+            }
+            matchLabelKeys = ["pod-template-hash"]
           }
-        ]
+        ] : []
         enableTopologyAwareRouting = var.ingress_nginx_topology_aware_routing
         watchIngressWithoutClass   = true
         service = merge(
@@ -74,7 +86,7 @@ data "helm_template" "ingress_nginx" {
           local.ingress_nginx_service_type == "NodePort" ?
           {
             nodePorts = {
-              http  = local.ingress_nginx_service_node_port_http,
+              http  = local.ingress_nginx_service_node_port_http
               https = local.ingress_nginx_service_node_port_https
             }
           } : {},
@@ -102,7 +114,7 @@ data "helm_template" "ingress_nginx" {
             proxy-real-ip-cidr = (
               var.ingress_nginx_service_external_traffic_policy == "Local" ?
               hcloud_network_subnet.load_balancer.ip_range :
-              local.node_ipv4_cidr
+              local.network_node_ipv4_cidr
             )
             compute-full-forwarded-for = true
             use-proxy-protocol         = true

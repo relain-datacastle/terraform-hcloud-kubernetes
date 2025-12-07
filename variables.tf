@@ -94,6 +94,37 @@ variable "cluster_delete_protection" {
   description = "Adds delete protection for resources that support it."
 }
 
+variable "cluster_allow_scheduling_on_control_planes" {
+  type        = bool
+  default     = null
+  description = "Allow scheduling on control plane nodes. If this is false, scheduling on control plane nodes is explicitly disabled. Defaults to true if there are no workers present."
+}
+
+
+# Client Tools
+variable "client_prerequisites_check_enabled" {
+  type        = bool
+  default     = true
+  description = "Controls whether a preflight check verifies that required client tools are installed before provisioning."
+}
+
+variable "talosctl_version_check_enabled" {
+  type        = bool
+  default     = true
+  description = "Controls whether a preflight check verifies the local talosctl client version before provisioning."
+}
+
+variable "talosctl_retry_count" {
+  type        = number
+  default     = 5
+  description = "Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability."
+
+  validation {
+    condition     = var.talosctl_retry_count >= 0
+    error_message = "The talosctl retry count must be at least 0."
+  }
+}
+
 
 # Network Configuration
 variable "network_ipv4_cidr" {
@@ -105,31 +136,31 @@ variable "network_ipv4_cidr" {
 variable "network_node_ipv4_cidr" {
   type        = string
   default     = null # 10.0.64.0/19 when network_ipv4_cidr is 10.0.0.0/16
-  description = "Specifies the Node CIDR used for allocating IP addresses to both Control Plane and Worker nodes within the cluster. If not explicitly provided, a default subnet is dynamically calculated from the specified network_ipv4_cidr."
+  description = "Specifies the Node IPv4 CIDR used for allocating IP addresses to both Control Plane and Worker nodes within the cluster. If not explicitly provided, a default subnet is dynamically calculated from the specified network_ipv4_cidr."
 }
 
 variable "network_node_ipv4_subnet_mask_size" {
   type        = number
   default     = null # /25 when network_pod_ipv4_cidr is 10.0.128.0/17
-  description = "Specifies the subnet mask size used for node pools within the cluster. This setting determines the network segmentation precision, with a smaller mask size allowing more IP addresses per subnet. If not explicitly provided, an optimal default size is dynamically calculated from the network_pod_ipv4_cidr."
+  description = "Specifies the IPv4 subnet mask size used for node pools within the cluster. This setting determines the network segmentation precision, with a smaller mask size allowing more IP addresses per subnet. If not explicitly provided, an optimal default size is dynamically calculated from the network_pod_ipv4_cidr."
 }
 
 variable "network_service_ipv4_cidr" {
   type        = string
   default     = null # 10.0.96.0/19 when network_ipv4_cidr is 10.0.0.0/16
-  description = "Specifies the Service CIDR block used for allocating ClusterIPs to services within the cluster. If not provided, a default subnet is dynamically calculated from the specified network_ipv4_cidr."
+  description = "Specifies the Service IPv4 CIDR block used for allocating ClusterIPs to services within the cluster. If not provided, a default subnet is dynamically calculated from the specified network_ipv4_cidr."
 }
 
 variable "network_pod_ipv4_cidr" {
   type        = string
   default     = null # 10.0.128.0/17 when network_ipv4_cidr is 10.0.0.0/16
-  description = "Defines the Pod CIDR block allocated for use by pods within the cluster. This CIDR block is essential for internal pod communications. If a specific subnet is not provided, a default is dynamically calculated from the network_ipv4_cidr."
+  description = "Defines the Pod IPv4 CIDR block allocated for use by pods within the cluster. This CIDR block is essential for internal pod communications. If a specific subnet is not provided, a default is dynamically calculated from the network_ipv4_cidr."
 }
 
-variable "network_native_routing_cidr" {
+variable "network_native_routing_ipv4_cidr" {
   type        = string
   default     = null
-  description = "Specifies the CIDR block that the CNI assumes will be routed natively by the underlying network infrastructure without the need for SNAT."
+  description = "Specifies the IPv4 CIDR block that the CNI assumes will be routed natively by the underlying network infrastructure without the need for SNAT."
 }
 
 
@@ -322,7 +353,7 @@ variable "control_plane_nodepools" {
 }
 
 variable "control_plane_config_patches" {
-  type        = list(any)
+  type        = any
   default     = []
   description = "List of configuration patches applied to the Control Plane nodes."
 }
@@ -400,7 +431,7 @@ variable "worker_nodepools" {
 }
 
 variable "worker_config_patches" {
-  type        = list(any)
+  type        = any
   default     = []
   description = "List of configuration patches applied to the Worker nodes."
 }
@@ -421,7 +452,7 @@ variable "cluster_autoscaler_helm_chart" {
 
 variable "cluster_autoscaler_helm_version" {
   type        = string
-  default     = "9.45.1"
+  default     = "9.50.1"
   description = "Version of the Cluster Autoscaler Helm chart to deploy."
 }
 
@@ -484,16 +515,56 @@ variable "cluster_autoscaler_nodepools" {
 }
 
 variable "cluster_autoscaler_config_patches" {
-  type        = list(any)
+  type        = any
   default     = []
   description = "List of configuration patches applied to the Cluster Autoscaler nodes."
+}
+
+variable "cluster_autoscaler_discovery_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable rolling upgrades of Cluster Autoscaler nodes during Talos OS upgrades and Talos configuration changes."
+}
+
+
+# Packer
+variable "packer_amd64_builder" {
+  type = object({
+    server_type     = optional(string, "cpx11")
+    server_location = optional(string, "ash")
+  })
+  default     = {}
+  description = "Configuration for the server used when building the Talos AMD64 image with Packer."
+
+  validation {
+    condition = contains([
+      "fsn1", "nbg1", "hel1", "ash", "hil", "sin"
+    ], var.packer_amd64_builder.server_location)
+    error_message = "The server_location must be one of: 'fsn1' (Falkenstein), 'nbg1' (Nuremberg), 'hel1' (Helsinki), 'ash' (Ashburn), 'hil' (Hillsboro), 'sin' (Singapore)."
+  }
+}
+
+variable "packer_arm64_builder" {
+  type = object({
+    server_type     = optional(string, "cax11")
+    server_location = optional(string, "fsn1")
+  })
+  default     = {}
+  description = "Configuration for the server used when building the Talos ARM64 image with Packer."
+
+  validation {
+    condition = contains([
+      "fsn1", "nbg1", "hel1", "ash", "hil", "sin"
+    ], var.packer_arm64_builder.server_location)
+    error_message = "The server_location must be one of: 'fsn1' (Falkenstein), 'nbg1' (Nuremberg), 'hel1' (Helsinki), 'ash' (Ashburn), 'hil' (Hillsboro), 'sin' (Singapore)."
+  }
 }
 
 
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.8.4"
+  default     = "v1.11.1" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -705,10 +776,11 @@ variable "talos_extra_remote_manifests" {
   default     = null
 }
 
+
 # Talos Backup
 variable "talos_backup_version" {
   type        = string
-  default     = "v0.1.0-beta.2-1-g9ccc125"
+  default     = "v0.1.0-beta.3-3-g38dad7c"
   description = "Specifies the version of Talos Backup to be used in generated machine configurations."
 }
 
@@ -774,6 +846,12 @@ variable "talos_backup_age_x25519_public_key" {
   description = "AGE X25519 Public Key for client side Talos Backup encryption."
 }
 
+variable "talos_backup_enable_compression" {
+  type        = bool
+  default     = false
+  description = "Enable ETCD snapshot compression with zstd algorithm."
+}
+
 variable "talos_backup_schedule" {
   type        = string
   default     = "0 * * * *"
@@ -784,7 +862,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.31.4"
+  default     = "v1.33.4" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -836,10 +914,118 @@ variable "talos_ccm_enabled" {
 
 variable "talos_ccm_version" {
   type        = string
-  default     = "v1.9.1" # https://github.com/siderolabs/talos-cloud-controller-manager
+  default     = "v1.11.0" # https://github.com/siderolabs/talos-cloud-controller-manager
   description = "Specifies the version of the Talos Cloud Controller Manager (CCM) to use. This version controls cloud-specific integration features in the Talos operating system."
 }
 
+# Kubernetes OIDC Configuration
+variable "oidc_enabled" {
+  description = "Enable OIDC authentication for Kubernetes API server"
+  type        = bool
+  default     = false
+}
+
+variable "oidc_issuer_url" {
+  description = "URL of the OIDC provider (e.g., https://your-oidc-provider.com). Required when oidc_enabled is true"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.oidc_enabled == false || (var.oidc_enabled == true && var.oidc_issuer_url != "")
+    error_message = "oidc_issuer_url is required when oidc_enabled is true."
+  }
+}
+
+variable "oidc_client_id" {
+  description = "OIDC client ID that all tokens must be issued for. Required when oidc_enabled is true"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.oidc_enabled == false || (var.oidc_enabled == true && var.oidc_client_id != "")
+    error_message = "oidc_client_id is required when oidc_enabled is true."
+  }
+}
+
+variable "oidc_username_claim" {
+  description = "JWT claim to use as the username"
+  type        = string
+  default     = "sub"
+}
+
+variable "oidc_groups_claim" {
+  description = "JWT claim to use as the user's groups"
+  type        = string
+  default     = "groups"
+}
+
+variable "oidc_groups_prefix" {
+  description = "Prefix prepended to group claims to prevent clashes with existing names"
+  type        = string
+  default     = "oidc:"
+}
+
+variable "oidc_group_mappings" {
+  description = "List of OIDC groups mapped to Kubernetes roles and cluster roles"
+  type = list(object({
+    group         = string
+    cluster_roles = optional(list(string), [])
+    roles = optional(list(object({
+      name      = string
+      namespace = string
+    })), [])
+  }))
+  default = []
+
+  validation {
+    condition = length(var.oidc_group_mappings) == length(distinct([
+      for mapping in var.oidc_group_mappings : mapping.group
+    ]))
+    error_message = "OIDC group names must be unique. Duplicate group names found."
+  }
+}
+
+# Kubernetes RBAC
+variable "rbac_roles" {
+  description = "List of custom Kubernetes roles to create"
+  type = list(object({
+    name      = string
+    namespace = string
+    rules = list(object({
+      api_groups = list(string)
+      resources  = list(string)
+      verbs      = list(string)
+    }))
+  }))
+  default = []
+
+  validation {
+    condition = length(var.rbac_roles) == length(distinct([
+      for role in var.rbac_roles : role.name
+    ]))
+    error_message = "RBAC role names must be unique. Duplicate role names found."
+  }
+}
+
+variable "rbac_cluster_roles" {
+  description = "List of custom Kubernetes cluster roles to create"
+  type = list(object({
+    name = string
+    rules = list(object({
+      api_groups = list(string)
+      resources  = list(string)
+      verbs      = list(string)
+    }))
+  }))
+  default = []
+
+  validation {
+    condition = length(var.rbac_cluster_roles) == length(distinct([
+      for role in var.rbac_cluster_roles : role.name
+    ]))
+    error_message = "RBAC cluster role names must be unique. Duplicate cluster role names found."
+  }
+}
 
 # Hetzner Cloud
 variable "hcloud_token" {
@@ -902,7 +1088,7 @@ variable "hcloud_ccm_helm_chart" {
 
 variable "hcloud_ccm_helm_version" {
   type        = string
-  default     = "1.24.0"
+  default     = "1.28.0"
   description = "Version of the Hcloud CCM Helm chart to deploy."
 }
 
@@ -910,6 +1096,18 @@ variable "hcloud_ccm_helm_values" {
   type        = any
   default     = {}
   description = "Custom Helm values for the Hcloud CCM chart deployment. These values will merge with and will override the default values provided by the Hcloud CCM Helm chart."
+}
+
+variable "hcloud_ccm_load_balancers_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable or disable Hetzner Cloud CCM Service Controller"
+}
+
+variable "hcloud_ccm_network_routes_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable or disable Hetzner Cloud CCM Route Controller"
 }
 
 
@@ -928,7 +1126,7 @@ variable "hcloud_csi_helm_chart" {
 
 variable "hcloud_csi_helm_version" {
   type        = string
-  default     = "2.13.0"
+  default     = "2.18.2"
   description = "Version of the Hcloud CSI Helm chart to deploy."
 }
 
@@ -942,6 +1140,39 @@ variable "hcloud_csi_enabled" {
   type        = bool
   default     = true
   description = "Enables the Hetzner Container Storage Interface (CSI)."
+}
+
+variable "hcloud_csi_encryption_passphrase" {
+  type        = string
+  default     = null
+  description = "Passphrase for encrypting volumes created by the Hcloud CSI driver. If not provided, a random passphrase will be generated. The passphrase must be 8-512 characters long and contain only printable 7-bit ASCII characters."
+  sensitive   = true
+
+  validation {
+    condition     = var.hcloud_csi_encryption_passphrase == null || can(regex("^[ -~]{8,512}$", var.hcloud_csi_encryption_passphrase))
+    error_message = "The passphrase must be 8-512 characters long and contain only printable 7-bit ASCII characters (character codes 32-126)."
+  }
+}
+
+variable "hcloud_csi_storage_classes" {
+  description = "User defined Hcloud CSI storage classes"
+  type = list(object({
+    name                = string
+    encrypted           = bool
+    reclaimPolicy       = optional(string, "Delete")
+    defaultStorageClass = optional(bool, false)
+    extraParameters     = optional(map(string), {})
+  }))
+  default = [
+    { name = "hcloud-volumes-encrypted", encrypted = true, defaultStorageClass = true },
+    { name = "hcloud-volumes", encrypted = false, defaultStorageClass = false }
+  ]
+}
+
+variable "hcloud_csi_volume_extra_labels" {
+  type        = map(string)
+  default     = {}
+  description = "Specifies default labels to apply to all newly created volumes. The value must be a map in the format key: value."
 }
 
 
@@ -960,7 +1191,7 @@ variable "longhorn_helm_chart" {
 
 variable "longhorn_helm_version" {
   type        = string
-  default     = "1.8.1"
+  default     = "1.10.1"
   description = "Version of the Longhorn Helm chart to deploy."
 }
 
@@ -974,6 +1205,12 @@ variable "longhorn_enabled" {
   type        = bool
   default     = false
   description = "Enable or disable Longhorn integration"
+}
+
+variable "longhorn_default_storage_class" {
+  type        = bool
+  default     = false
+  description = "Set Longhorn as the default storage class."
 }
 
 
@@ -998,7 +1235,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.17.3"
+  default     = "1.18.4"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1014,10 +1251,86 @@ variable "cilium_encryption_enabled" {
   description = "Enables transparent network encryption using Cilium within the Kubernetes cluster. When enabled, this feature provides added security for network traffic."
 }
 
+variable "cilium_encryption_type" {
+  type        = string
+  default     = "wireguard"
+  description = "Type of encryption to use for Cilium network encryption. Options: 'wireguard' or 'ipsec'."
+
+  validation {
+    condition     = contains(["wireguard", "ipsec"], var.cilium_encryption_type)
+    error_message = "Encryption type must be either 'wireguard' or 'ipsec'."
+  }
+}
+
+variable "cilium_ipsec_algorithm" {
+  type        = string
+  default     = "rfc4106(gcm(aes))"
+  description = "Cilium IPSec key algorithm."
+}
+
+variable "cilium_ipsec_key_size" {
+  type        = number
+  default     = 256
+  description = "AES key size in bits for IPSec encryption (128, 192, or 256). Only used when cilium_encryption_type is 'ipsec'."
+
+  validation {
+    condition     = contains([128, 192, 256], var.cilium_ipsec_key_size)
+    error_message = "IPSec key size must be 128, 192 or 256 bits."
+  }
+}
+
+variable "cilium_ipsec_key_id" {
+  type        = number
+  default     = 1
+  description = "IPSec key ID (1-15, increment manually for rotation). Only used when cilium_encryption_type is 'ipsec'."
+
+  validation {
+    condition     = var.cilium_ipsec_key_id >= 1 && var.cilium_ipsec_key_id <= 15 && floor(var.cilium_ipsec_key_id) == var.cilium_ipsec_key_id
+    error_message = "The IPSec key_id must be between 1 and 15."
+  }
+}
+
+variable "cilium_kube_proxy_replacement_enabled" {
+  type        = bool
+  default     = true
+  description = "Enables Cilium's eBPF kube-proxy replacement."
+}
+
+variable "cilium_socket_lb_host_namespace_only_enabled" {
+  type        = bool
+  default     = false
+  description = "Limit Cilium's socket-level load-balancing to the host namespace only."
+}
+
+variable "cilium_routing_mode" {
+  type        = string
+  description = "Cilium routing mode (e.g., 'native', 'tunnel', etc.)"
+  default     = "native"
+  validation {
+    condition     = contains(["", "native", "tunnel"], var.cilium_routing_mode)
+    error_message = "cilium_routing_mode must be one of: empty string, native, or tunnel."
+  }
+}
+
+variable "cilium_bpf_datapath_mode" {
+  type        = string
+  default     = "veth"
+  description = "Mode for Pod devices for the core datapath. Allowed values: veth, netkit, netkit-l2. Warning: Netkit is still in beta and should not be used together with IPsec encryption!"
+  validation {
+    condition     = contains(["veth", "netkit", "netkit-l2"], var.cilium_bpf_datapath_mode)
+    error_message = "cilium_bpf_datapath_mode must be one of: veth, netkit, netkit-l2."
+  }
+}
+
 variable "cilium_egress_gateway_enabled" {
   type        = bool
   default     = false
   description = "Enables egress gateway to redirect and SNAT the traffic that leaves the cluster."
+
+  validation {
+    condition     = !var.cilium_egress_gateway_enabled || var.cilium_kube_proxy_replacement_enabled
+    error_message = "cilium_egress_gateway_enabled can only be true when cilium_kube_proxy_replacement_enabled is true, because Cilium Egress Gateway requires kubeProxyReplacement=true and BPF masquerading."
+  }
 }
 
 variable "cilium_service_monitor_enabled" {
@@ -1070,7 +1383,7 @@ variable "metrics_server_helm_chart" {
 
 variable "metrics_server_helm_version" {
   type        = string
-  default     = "3.12.2"
+  default     = "3.13.0"
   description = "Version of the Metrics Server Helm chart to deploy."
 }
 
@@ -1114,7 +1427,7 @@ variable "cert_manager_helm_chart" {
 
 variable "cert_manager_helm_version" {
   type        = string
-  default     = "v1.17.2"
+  default     = "v1.19.1"
   description = "Version of the Cert Manager Helm chart to deploy."
 }
 
@@ -1146,7 +1459,7 @@ variable "ingress_nginx_helm_chart" {
 
 variable "ingress_nginx_helm_version" {
   type        = string
-  default     = "4.12.2"
+  default     = "4.14.0"
   description = "Version of the Ingress NGINX Controller Helm chart to deploy."
 }
 
@@ -1401,7 +1714,6 @@ variable "ingress_load_balancer_pools" {
   }
 }
 
-
 # Miscellaneous
 variable "prometheus_operator_crds_enabled" {
   type        = bool
@@ -1411,6 +1723,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.82.1" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.87.0" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }

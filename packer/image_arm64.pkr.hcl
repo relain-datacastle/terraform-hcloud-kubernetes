@@ -3,8 +3,7 @@ variable "cluster_name" {
 }
 
 variable "server_location" {
-  type    = string
-  default = "fsn1"
+  type = string
 }
 
 variable "talos_version" {
@@ -19,12 +18,16 @@ variable "talos_image_url" {
   type = string
 }
 
+variable "server_type" {
+  type = string
+}
+
 # Source for the Talos ARM64 image
-source "hcloud" "arm64_builder" {
+source "hcloud" "talos_arm64_image" {
   rescue       = "linux64"
-  image        = "debian-12"
+  image        = "debian-13"
   location     = var.server_location
-  server_type  = "cax11"
+  server_type  = var.server_type
   ssh_username = "root"
 
   snapshot_name = "Talos Linux ARM64 for ${var.cluster_name}"
@@ -38,7 +41,7 @@ source "hcloud" "arm64_builder" {
 
 # Build the Talos ARM64 snapshot
 build {
-  sources = ["source.hcloud.arm64_builder"]
+  sources = ["source.hcloud.talos_arm64_image"]
 
   provisioner "shell" {
     inline_shebang = "/bin/bash -e"
@@ -47,21 +50,23 @@ build {
       <<-EOT
         set -euo pipefail
 
-        echo 'Download Talos ${var.talos_version} image (${var.talos_schematic_id})'
+        printf '%s\n' 'Zeroing disk first before writing Talos image'
+        blkdiscard -v /dev/sda 2>/dev/null
 
+        printf '%s\n' 'Downloading Talos ${var.talos_version} (${var.talos_schematic_id}) ...'
         wget \
           --quiet \
-          --timeout=5 \
+          --timeout=20 \
           --waitretry=5 \
           --tries=5 \
           --retry-connrefused \
           --inet4-only \
           --output-document=- \
-          '${var.talos_image_url}' | \
-        xz -d -c | dd status=none of=/dev/sda
-        sync
+          '${var.talos_image_url}' \
+        | xz -T0 -dc \
+        | dd of=/dev/sda bs=1M iflag=fullblock oflag=direct conv=fsync status=none
 
-        echo 'Talos ${var.talos_version} image (${var.talos_schematic_id}) downloaded'
+        printf '%s\n' 'Talos ${var.talos_version} (${var.talos_schematic_id}) downloaded'
       EOT
     ]
   }
